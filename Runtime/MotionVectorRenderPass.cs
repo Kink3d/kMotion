@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace kTools.Motion
 {
-    public class MotionRenderPass : ScriptableRenderPass
+    public class MotionVectorRenderPass : ScriptableRenderPass
     {
 #region Fields
         const string kCameraShader = "Hidden/kMotion/CameraMotionVectors";
@@ -27,7 +27,7 @@ namespace kTools.Motion
 #endregion
 
 #region Constructors
-        public MotionRenderPass()
+        public MotionVectorRenderPass()
         {
             // Set data
             renderPassEvent = RenderPassEvent.AfterRenderingOpaques;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace kTools.Motion
@@ -8,7 +9,8 @@ namespace kTools.Motion
     {
 #region Fields
         static MotionRendererFeature s_Instance;
-        readonly MotionRenderPass m_RenderPass;
+        readonly MotionVectorRenderPass m_MotionVectorRenderPass;
+        readonly MotionBlurRenderPass m_MotionBlurRenderPass;
 
         Dictionary<Camera, MotionData> m_MotionDatas;
         uint  m_FrameCount;
@@ -20,7 +22,8 @@ namespace kTools.Motion
         public MotionRendererFeature()
         {
             s_Instance = this;
-            m_RenderPass = new MotionRenderPass();
+            m_MotionVectorRenderPass = new MotionVectorRenderPass();
+            m_MotionBlurRenderPass = new MotionBlurRenderPass();
             m_MotionDatas = new Dictionary<Camera, MotionData>();
         }
 #endregion
@@ -48,9 +51,18 @@ namespace kTools.Motion
             CalculateTime();
             UpdateMotionData(camera, motionData);
 
-            // Enqueue passes
-            m_RenderPass.Setup(motionData);
-            renderer.EnqueuePass(m_RenderPass);            
+            // Motion vector pass
+            m_MotionVectorRenderPass.Setup(motionData);
+            renderer.EnqueuePass(m_MotionVectorRenderPass);
+
+            // Motion blur pass
+            var stack = VolumeManager.instance.stack;
+            var motionBlur = stack.GetComponent<MotionBlur>();
+            if (motionBlur.IsActive() && !renderingData.cameraData.isSceneViewCamera)
+            {
+                m_MotionBlurRenderPass.Setup(motionBlur);
+                renderer.EnqueuePass(m_MotionBlurRenderPass);
+            }
         }
 #endregion
 
