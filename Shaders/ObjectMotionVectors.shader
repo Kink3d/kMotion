@@ -2,16 +2,20 @@
 {
     SubShader
     {
-        // Lightmode tag required setup motion vector parameters by C++ (legacy Unity)
-        Tags{ "LightMode" = "MotionVectors" }
-
         Pass
         {
+            // Lightmode tag required setup motion vector parameters by C++ (legacy Unity)
+            Tags{ "LightMode" = "MotionVectors" }
+
             HLSLPROGRAM
             // Required to compile gles 2.0 with standard srp library
             #pragma prefer_hlslcc gles
             #pragma exclude_renderers d3d11_9x
 			#pragma target 3.0
+
+            //--------------------------------------
+            // GPU Instancing
+            #pragma multi_compile_instancing
 
             #pragma vertex vert
             #pragma fragment frag
@@ -44,6 +48,7 @@
                 float4 positionCS           : SV_POSITION;
                 float4 positionVP           : TEXCOORD0;
                 float4 previousPositionVP   : TEXCOORD1;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -51,9 +56,12 @@
             // Vertex
             Varyings vert(Attributes input)
             {
-                Varyings output;
+                Varyings output = (Varyings)0;
+
                 UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+
                 output.positionCS = TransformObjectToHClip(input.position.xyz);
 
                 // this works around an issue with dynamic batching
@@ -73,6 +81,9 @@
             // Fragment
             half4 frag(Varyings input) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
                 // Note: unity_MotionVectorsParams.y is 0 is forceNoMotion is enabled
                 bool forceNoMotion = unity_MotionVectorsParams.y == 0.0;
                 if (forceNoMotion)

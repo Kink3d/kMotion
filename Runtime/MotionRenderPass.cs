@@ -50,6 +50,10 @@ namespace kTools.Motion
             // Get data
             var camera = renderingData.cameraData.camera;
 
+            // Never draw in Preview
+            if(camera.cameraType == CameraType.Preview)
+                return;
+
             // Profiling command
             CommandBuffer cmd = CommandBufferPool.Get(kProfilingTag);
             using (new ProfilingSample(cmd, kProfilingTag))
@@ -58,10 +62,14 @@ namespace kTools.Motion
 
                 // Render target
                 m_MotionVectorHandle.Init(kMotionVectorTexture);
-                var descriptor = new RenderTextureDescriptor(camera.pixelWidth, camera.pixelHeight, RenderTextureFormat.RGHalf, 16);
+                var descriptor = new RenderTextureDescriptor(camera.scaledPixelWidth, camera.scaledPixelHeight, RenderTextureFormat.RGHalf, 16);
                 cmd.GetTemporaryRT(m_MotionVectorHandle.id, descriptor, FilterMode.Point);
-                ConfigureTarget(m_MotionVectorHandle.Identifier());
-                cmd.SetRenderTarget(m_MotionVectorHandle.Identifier());
+                ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+                cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+                
+                // TODO: Why do I have to clear here?
+                cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
+                ExecuteCommand(context, cmd);
 
                 // Shader uniforms
                 Shader.SetGlobalMatrix(kPreviousViewProjectionMatrix, m_MotionData.previousViewProjectionMatrix);
@@ -85,7 +93,6 @@ namespace kTools.Motion
             var drawingSettings = new DrawingSettings(ShaderTagId.none, sortingSettings)
             {
                 perObjectData = PerObjectData.MotionVectors,
-                mainLightIndex = renderingData.lightData.mainLightIndex,
                 enableDynamicBatching = renderingData.supportsDynamicBatching,
                 enableInstancing = true,
             };
@@ -120,7 +127,7 @@ namespace kTools.Motion
             var cullingResults = context.Cull(ref cullingParameters);
 
             var drawingSettings = GetDrawingSettings(ref renderingData);
-            var filteringSettings = new FilteringSettings(RenderQueueRange.all, camera.cullingMask);
+            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask);
             var renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
             
             // Draw Renderers

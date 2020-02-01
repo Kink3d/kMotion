@@ -2,13 +2,12 @@
 {
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" }
-        Cull Off 
-        ZWrite Off 
-        ZTest Always
-
         Pass
         {
+            Cull Off 
+            ZWrite Off 
+            ZTest Always
+
             HLSLPROGRAM
             // Required to compile gles 2.0 with standard srp library
             #pragma prefer_hlslcc gles
