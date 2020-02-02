@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace kTools.Motion
 {
-    public class MotionVectorRenderPass : ScriptableRenderPass
+    sealed class MotionVectorRenderPass : ScriptableRenderPass
     {
 #region Fields
         const string kCameraShader = "Hidden/kMotion/CameraMotionVectors";
@@ -34,13 +34,25 @@ namespace kTools.Motion
         }
 #endregion
 
-#region Setup
+#region State
         internal void Setup(MotionData motionData)
         {
             // Set data
             m_MotionData = motionData;
             m_CameraMaterial = new Material(Shader.Find(kCameraShader));
             m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
+        }
+
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        {
+            // Configure Render Target
+            m_MotionVectorHandle.Init(kMotionVectorTexture);
+            cmd.GetTemporaryRT(m_MotionVectorHandle.id, cameraTextureDescriptor, FilterMode.Point);
+            ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+            cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+                
+            // TODO: Why do I have to clear here?
+            cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
         }
 #endregion
 
@@ -58,17 +70,6 @@ namespace kTools.Motion
             CommandBuffer cmd = CommandBufferPool.Get(kProfilingTag);
             using (new ProfilingSample(cmd, kProfilingTag))
             {
-                ExecuteCommand(context, cmd);
-
-                // Render target
-                m_MotionVectorHandle.Init(kMotionVectorTexture);
-                var descriptor = new RenderTextureDescriptor(camera.scaledPixelWidth, camera.scaledPixelHeight, RenderTextureFormat.RGHalf, 16);
-                cmd.GetTemporaryRT(m_MotionVectorHandle.id, descriptor, FilterMode.Point);
-                ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
-                cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
-                
-                // TODO: Why do I have to clear here?
-                cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
                 ExecuteCommand(context, cmd);
 
                 // Shader uniforms
@@ -140,7 +141,8 @@ namespace kTools.Motion
         {
             if (cmd == null)
                 throw new ArgumentNullException("cmd");
-
+            
+            // Reset Render Target
             if (m_MotionVectorHandle != RenderTargetHandle.CameraTarget)
             {
                 cmd.ReleaseTemporaryRT(m_MotionVectorHandle.id);

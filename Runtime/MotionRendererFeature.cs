@@ -21,6 +21,7 @@ namespace kTools.Motion
 #region Constructors
         public MotionRendererFeature()
         {
+            // Set data
             s_Instance = this;
             m_MotionVectorRenderPass = new MotionVectorRenderPass();
             m_MotionBlurRenderPass = new MotionBlurRenderPass();

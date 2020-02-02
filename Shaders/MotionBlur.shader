@@ -7,25 +7,33 @@
 
     HLSLINCLUDE
 
+    // -------------------------------------
+    // Includes
     #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
     #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Random.hlsl"
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
     #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
 
+    // -------------------------------------
+    // Inputs
     TEXTURE2D_X(_MainTex);
     TEXTURE2D(_MotionVectorTexture);       SAMPLER(sampler_MotionVectorTexture);
 
     float _Intensity;
     float4 _MainTex_TexelSize;
 
+    // -------------------------------------
+    // Structs
     struct VaryingsMB
     {
         float4 positionCS    : SV_POSITION;
         float4 uv            : TEXCOORD0;
         UNITY_VERTEX_OUTPUT_STEREO
     };
-
-    VaryingsMB VertCMB(Attributes input)
+    
+    // -------------------------------------
+    // Vertex
+    VaryingsMB VertMB(Attributes input)
     {
         VaryingsMB output;
         UNITY_SETUP_INSTANCE_ID(input);
@@ -42,6 +50,8 @@
         return output;
     }
 
+    // -------------------------------------
+    // Fragment
     float3 GatherSample(float sampleNumber, float2 velocity, float invSampleCount, float2 centerUV, float randomVal, float velocitySign)
     {
         float  offsetLength = (sampleNumber + 0.5) + (velocitySign * (randomVal - 0.5));
@@ -84,7 +94,7 @@
 
             HLSLPROGRAM
 
-            #pragma vertex VertCMB
+            #pragma vertex VertMB
             #pragma fragment Frag
 
             half4 Frag(VaryingsMB input) : SV_Target
@@ -101,7 +111,7 @@
 
             HLSLPROGRAM
 
-            #pragma vertex VertCMB
+            #pragma vertex VertMB
             #pragma fragment Frag
 
             half4 Frag(VaryingsMB input) : SV_Target
@@ -118,7 +128,7 @@
 
             HLSLPROGRAM
 
-            #pragma vertex VertCMB
+            #pragma vertex VertMB
             #pragma fragment Frag
 
             half4 Frag(VaryingsMB input) : SV_Target

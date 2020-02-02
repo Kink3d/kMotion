@@ -14,6 +14,7 @@ namespace kTools.Motion
 #region Constructors
         public MotionData()
         {
+            // Set data
             m_IsFirstFrame = true;
             m_LastFrameActive = -1;
             m_ViewProjectionMatrix = Matrix4x4.identity;

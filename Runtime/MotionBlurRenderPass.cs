@@ -4,7 +4,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace kTools.Motion
 {
-    public class MotionBlurRenderPass : ScriptableRenderPass
+    sealed class MotionBlurRenderPass : ScriptableRenderPass
     {
 #region Fields
         const string kMotionBlurShader = "Hidden/kMotion/MotionBlur";
@@ -17,7 +17,7 @@ namespace kTools.Motion
         };
 
         Material m_Material;
-        MotionBlur m_VolumeComponent;
+        MotionBlur m_MotionBlur;
 #endregion
 
 #region Constructors
@@ -29,10 +29,10 @@ namespace kTools.Motion
 #endregion
 
 #region Setup
-        internal void Setup(MotionBlur volumeComponent)
+        internal void Setup(MotionBlur motionBlur)
         {
             // Set data
-            m_VolumeComponent = volumeComponent;
+            m_MotionBlur = motionBlur;
             m_Material = new Material(Shader.Find(kMotionBlurShader));
         }
 #endregion
@@ -52,7 +52,7 @@ namespace kTools.Motion
             using (new ProfilingSample(cmd, kProfilingTag))
             {
                 // Set Material properties from VolumeComponent
-                m_Material.SetFloat("_Intensity", m_VolumeComponent.intensity.value);
+                m_Material.SetFloat("_Intensity", m_MotionBlur.intensity.value);
 
                 // TODO: Why doesnt RenderTargetHandle.CameraTarget work?
                 var colorTextureIdentifier = new RenderTargetIdentifier("_CameraColorTexture");
@@ -62,7 +62,7 @@ namespace kTools.Motion
                 var renderTexture = RenderTexture.GetTemporary(descriptor);
 
                 // Blits
-                var passIndex = (int)m_VolumeComponent.quality.value;
+                var passIndex = (int)m_MotionBlur.quality.value;
                 cmd.Blit(colorTextureIdentifier, renderTexture, m_Material, passIndex);
                 cmd.Blit(renderTexture, colorTextureIdentifier, m_Material, passIndex);
                 ExecuteCommand(context, cmd);
