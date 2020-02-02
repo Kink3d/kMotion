@@ -19,7 +19,7 @@ namespace kTools.Motion
 #endregion
 
 #region Constructors
-        public MotionRendererFeature()
+        internal MotionRendererFeature()
         {
             // Set data
             s_Instance = this;

@@ -21,10 +21,10 @@ namespace kTools.Motion
 #endregion
 
 #region Constructors
-        public MotionBlurRenderPass()
+        internal MotionBlurRenderPass()
         {
             // Set data
-            renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
+            renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
         }
 #endregion
 

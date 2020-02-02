@@ -12,7 +12,7 @@ namespace kTools.Motion
 #endregion
 
 #region Constructors
-        public MotionData()
+        internal MotionData()
         {
             // Set data
             m_IsFirstFrame = true;

@@ -27,7 +27,7 @@ namespace kTools.Motion
 #endregion
 
 #region Constructors
-        public MotionVectorRenderPass()
+        internal MotionVectorRenderPass()
         {
             // Set data
             renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
