@@ -24,7 +24,7 @@ namespace kTools.Motion
         internal MotionBlurRenderPass()
         {
             // Set data
-            renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
+            renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
         }
 #endregion
 
