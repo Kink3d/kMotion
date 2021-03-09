@@ -20,6 +20,7 @@
     TEXTURE2D(_MotionVectorTexture);       SAMPLER(sampler_MotionVectorTexture);
 
     float _Intensity;
+    float _Threshold;
     float4 _MainTex_TexelSize;
 
     // -------------------------------------
@@ -65,6 +66,11 @@
 
         float2 uv = UnityStereoTransformScreenSpaceTex(input.uv.xy);
         float2 velocity = SAMPLE_TEXTURE2D(_MotionVectorTexture, sampler_MotionVectorTexture, uv).rg * _Intensity;
+        if(length(velocity) < _Threshold)
+        {
+            return SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, uv);
+        }
+        velocity *= _Intensity;
         float randomVal = InterleavedGradientNoise(uv * _MainTex_TexelSize.zw, 0);
         float invSampleCount = rcp(iterations * 2.0);
 
