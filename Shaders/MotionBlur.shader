@@ -65,12 +65,15 @@
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
         float2 uv = UnityStereoTransformScreenSpaceTex(input.uv.xy);
-        float2 velocity = SAMPLE_TEXTURE2D(_MotionVectorTexture, sampler_MotionVectorTexture, uv).rg * _Intensity;
+        float2 velocity = (SAMPLE_TEXTURE2D(_MotionVectorTexture, sampler_MotionVectorTexture, uv).rg * 2 - 1);
+        // return half4(abs(velocity), 0, 1);
+
         if(length(velocity) < _Threshold)
         {
             return SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, uv);
         }
         velocity *= _Intensity;
+
         float randomVal = InterleavedGradientNoise(uv * _MainTex_TexelSize.zw, 0);
         float invSampleCount = rcp(iterations * 2.0);
 
