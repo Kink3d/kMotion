@@ -52,7 +52,7 @@ namespace kTools.Motion
             cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
                 
             // TODO: Why do I have to clear here?
-            cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
+            cmd.ClearRenderTarget(true, true, Color.gray, 1.0f);
         }
 #endregion
 
