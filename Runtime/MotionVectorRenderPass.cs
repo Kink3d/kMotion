@@ -8,7 +8,7 @@ namespace kTools.Motion
     sealed class MotionVectorRenderPass : ScriptableRenderPass
     {
 #region Fields
-        //const string kCameraShader = "Hidden/kMotion/CameraMotionVectors";
+        const string kCameraShader = "Hidden/kMotion/CameraMotionVectors";
         const string kObjectShader = "Hidden/kMotion/ObjectMotionVectors";
         const string kPreviousViewProjectionMatrix = "_PrevViewProjMatrix";
         const string kMotionVectorTexture = "_MotionVectorTexture";
@@ -21,7 +21,7 @@ namespace kTools.Motion
         };
 
         RenderTargetHandle m_MotionVectorHandle;
-        //Material m_CameraMaterial;
+        Material m_CameraMaterial;
         Material m_ObjectMaterial;
         MotionData m_MotionData;
 #endregion
@@ -39,7 +39,7 @@ namespace kTools.Motion
         {
             // Set data
             m_MotionData = motionData;
-            //m_CameraMaterial = new Material(Shader.Find(kCameraShader));
+            m_CameraMaterial = new Material(Shader.Find(kCameraShader));
             m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
 
@@ -47,11 +47,13 @@ namespace kTools.Motion
         {
             // Configure Render Target
             m_MotionVectorHandle.Init(kMotionVectorTexture);
+            cameraTextureDescriptor.colorFormat = RenderTextureFormat.RG16;
+            // Debug.Log(cameraTextureDescriptor.colorFormat);
             cmd.GetTemporaryRT(m_MotionVectorHandle.id, cameraTextureDescriptor, FilterMode.Point);
             ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
             cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
                 
-            // TODO: Why do I have to clear here?
+            // Clear with 0.5 because we packed vectors from clip into NDC space
             cmd.ClearRenderTarget(true, true, Color.gray, 1.0f);
         }
 #endregion
@@ -80,7 +82,7 @@ namespace kTools.Motion
                 camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
 
                 // Drawing
-                //DrawCameraMotionVectors(context, cmd, camera);
+                DrawCameraMotionVectors(context, cmd, camera);
                 DrawObjectMotionVectors(context, ref renderingData, cmd, camera);
             }
             ExecuteCommand(context, cmd);
@@ -110,12 +112,12 @@ namespace kTools.Motion
             return drawingSettings;
         }
 
-        //void DrawCameraMotionVectors(ScriptableRenderContext context, CommandBuffer cmd, Camera camera)
-        //{
-        //    // Draw fullscreen quad
-        //    cmd.DrawProcedural(Matrix4x4.identity, m_CameraMaterial, 0, MeshTopology.Triangles, 3, 1);
-        //    ExecuteCommand(context, cmd);
-        //}
+        void DrawCameraMotionVectors(ScriptableRenderContext context, CommandBuffer cmd, Camera camera)
+        {
+            // Draw fullscreen quad
+            cmd.DrawProcedural(Matrix4x4.identity, m_CameraMaterial, 0, MeshTopology.Triangles, 3, 1);
+            ExecuteCommand(context, cmd);
+        }
 
         void DrawObjectMotionVectors(ScriptableRenderContext context, ref RenderingData renderingData, CommandBuffer cmd, Camera camera)
         {
