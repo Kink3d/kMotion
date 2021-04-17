@@ -9,6 +9,12 @@ namespace kTools.Motion
     public sealed class MotionBlur: VolumeComponent, IPostProcessComponent
     {
         /// <summary>
+        /// Enable/Disable camera-based motion blur. Object-based motion blur is applied anyway.
+        /// </summary>
+        [Tooltip("Enable/Disable camera-based motion blur. Object-based motion blur is applied anyway.")]
+        public BoolParameter cameraBasedMB = new BoolParameter(true);
+        
+        /// <summary>
         /// The quality of the effect. Lower presets will result in better performance at the expense of visual quality.
         /// </summary>
         [Tooltip("The quality of the effect. Lower presets will result in better performance at the expense of visual quality.")]

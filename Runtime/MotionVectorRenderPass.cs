@@ -24,6 +24,7 @@ namespace kTools.Motion
         Material m_CameraMaterial;
         Material m_ObjectMaterial;
         MotionData m_MotionData;
+        private MotionBlur m_MotionBlur;
 #endregion
 
 #region Constructors
@@ -35,10 +36,11 @@ namespace kTools.Motion
 #endregion
 
 #region State
-        internal void Setup(MotionData motionData)
+        internal void Setup(MotionData motionData, MotionBlur motionBlur)
         {
             // Set data
             m_MotionData = motionData;
+            m_MotionBlur = motionBlur;
             m_CameraMaterial = new Material(Shader.Find(kCameraShader));
             m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
@@ -82,7 +84,8 @@ namespace kTools.Motion
                 camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
 
                 // Drawing
-                DrawCameraMotionVectors(context, cmd, camera);
+                if(m_MotionBlur.cameraBasedMB.value)
+                    DrawCameraMotionVectors(context, cmd, camera);
                 DrawObjectMotionVectors(context, ref renderingData, cmd, camera);
             }
             ExecuteCommand(context, cmd);
