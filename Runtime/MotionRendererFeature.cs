@@ -8,6 +8,7 @@ namespace kTools.Motion
     sealed class MotionRendererFeature : ScriptableRendererFeature
     {
 #region Fields
+        public LayerMask m_LayerMask;
         static MotionRendererFeature s_Instance;
         static MotionVectorRenderPass m_MotionVectorRenderPass;
         static MotionBlurRenderPass m_MotionBlurRenderPass;
@@ -57,7 +58,7 @@ namespace kTools.Motion
             UpdateMotionData(camera, motionData);
 
             // Motion vector pass
-            m_MotionVectorRenderPass.Setup(motionData, motionBlur);
+            m_MotionVectorRenderPass.Setup(motionData, motionBlur, m_LayerMask.value);
             renderer.EnqueuePass(m_MotionVectorRenderPass);
 
             // Motion blur pass

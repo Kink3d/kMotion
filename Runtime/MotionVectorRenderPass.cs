@@ -24,7 +24,8 @@ namespace kTools.Motion
         Material m_CameraMaterial;
         Material m_ObjectMaterial;
         MotionData m_MotionData;
-        private MotionBlur m_MotionBlur;
+        MotionBlur m_MotionBlur;
+        int m_layerMask;
 #endregion
 
 #region Constructors
@@ -36,11 +37,12 @@ namespace kTools.Motion
 #endregion
 
 #region State
-        internal void Setup(MotionData motionData, MotionBlur motionBlur)
+        internal void Setup(MotionData motionData, MotionBlur motionBlur, int layerMask)
         {
             // Set data
             m_MotionData = motionData;
             m_MotionBlur = motionBlur;
+            m_layerMask = layerMask;
             m_CameraMaterial = new Material(Shader.Find(kCameraShader));
             m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
@@ -133,7 +135,7 @@ namespace kTools.Motion
             var cullingResults = context.Cull(ref cullingParameters);
 
             var drawingSettings = GetDrawingSettings(ref renderingData);
-            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask);
+            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask & m_layerMask);
             var renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
             
             // Draw Renderers
