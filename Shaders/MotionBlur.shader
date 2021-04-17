@@ -20,6 +20,7 @@
     TEXTURE2D(_MotionVectorTexture);       SAMPLER(sampler_MotionVectorTexture);
 
     float _Intensity;
+    float _Threshold;
     float4 _MainTex_TexelSize;
 
     // -------------------------------------
@@ -52,11 +53,11 @@
 
     // -------------------------------------
     // Fragment
-    float3 GatherSample(float sampleNumber, float2 velocity, float invSampleCount, float2 centerUV, float randomVal, float velocitySign)
+    float4 GatherSample(float sampleNumber, float2 velocity, float invSampleCount, float2 centerUV, float randomVal, float velocitySign)
     {
         float  offsetLength = (sampleNumber + 0.5) + (velocitySign * (randomVal - 0.5));
         float2 sampleUV = centerUV + (offsetLength * invSampleCount) * velocity * velocitySign;
-        return SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, sampleUV).xyz;
+        return SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, sampleUV);
     }
 
     half4 DoMotionBlur(VaryingsMB input, int iterations)
@@ -64,11 +65,19 @@
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
         float2 uv = UnityStereoTransformScreenSpaceTex(input.uv.xy);
-        float2 velocity = SAMPLE_TEXTURE2D(_MotionVectorTexture, sampler_MotionVectorTexture, uv).rg * _Intensity;
+        float2 velocity = (SAMPLE_TEXTURE2D(_MotionVectorTexture, sampler_MotionVectorTexture, uv).rg * 2 - 1);
+        // return half4(abs(velocity), 0, 1);
+
+        if(length(velocity) < _Threshold)
+        {
+            return SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, uv);
+        }
+        velocity *= _Intensity;
+
         float randomVal = InterleavedGradientNoise(uv * _MainTex_TexelSize.zw, 0);
         float invSampleCount = rcp(iterations * 2.0);
 
-        half3 color = 0.0;
+        half4 color = 0.0;
 
         UNITY_UNROLL
         for (int i = 0; i < iterations; i++)
@@ -77,7 +86,7 @@
             color += GatherSample(i, velocity, invSampleCount, uv, randomVal,  1.0);
         }
 
-        return half4(color * invSampleCount, 1.0);
+        return color * invSampleCount;
     }
 
     ENDHLSL

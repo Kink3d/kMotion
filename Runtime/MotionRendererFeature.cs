@@ -9,8 +9,8 @@ namespace kTools.Motion
     {
 #region Fields
         static MotionRendererFeature s_Instance;
-        readonly MotionVectorRenderPass m_MotionVectorRenderPass;
-        readonly MotionBlurRenderPass m_MotionBlurRenderPass;
+        static MotionVectorRenderPass m_MotionVectorRenderPass;
+        static MotionBlurRenderPass m_MotionBlurRenderPass;
 
         Dictionary<Camera, MotionData> m_MotionDatas;
         uint  m_FrameCount;
@@ -23,9 +23,6 @@ namespace kTools.Motion
         {
             // Set data
             s_Instance = this;
-            m_MotionVectorRenderPass = new MotionVectorRenderPass();
-            m_MotionBlurRenderPass = new MotionBlurRenderPass();
-            m_MotionDatas = new Dictionary<Camera, MotionData>();
         }
 #endregion
 
@@ -33,6 +30,9 @@ namespace kTools.Motion
         public override void Create()
         {
             name = "Motion";
+            m_MotionVectorRenderPass = new MotionVectorRenderPass();
+            m_MotionBlurRenderPass = new MotionBlurRenderPass();
+            m_MotionDatas = new Dictionary<Camera, MotionData>();
         }
 #endregion
         
