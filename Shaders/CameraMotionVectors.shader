@@ -69,8 +69,7 @@
 
                 // Convert velocity from Clip space (-1..1) to NDC 0..1 space
                 // Note it doesn't mean we don't have negative value, we store negative or positive offset in NDC space.
-                // Note: ((positionVP * 0.5 + 0.5) - (previousPositionVP * 0.5 + 0.5)) = (velocity * 0.5)
-                return half4(velocity.xy * 0.5, 0, 0);
+                return half4(velocity.xy * 0.5 + 0.5, 0, 0);
             }
 
             ENDHLSL

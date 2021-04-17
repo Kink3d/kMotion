@@ -8,7 +8,7 @@ namespace kTools.Motion
     sealed class MotionVectorRenderPass : ScriptableRenderPass
     {
 #region Fields
-        //const string kCameraShader = "Hidden/kMotion/CameraMotionVectors";
+        const string kCameraShader = "Hidden/kMotion/CameraMotionVectors";
         const string kObjectShader = "Hidden/kMotion/ObjectMotionVectors";
         const string kPreviousViewProjectionMatrix = "_PrevViewProjMatrix";
         const string kMotionVectorTexture = "_MotionVectorTexture";
@@ -21,9 +21,11 @@ namespace kTools.Motion
         };
 
         RenderTargetHandle m_MotionVectorHandle;
-        //Material m_CameraMaterial;
+        Material m_CameraMaterial;
         Material m_ObjectMaterial;
         MotionData m_MotionData;
+        MotionBlur m_MotionBlur;
+        int m_layerMask;
 #endregion
 
 #region Constructors
@@ -35,11 +37,13 @@ namespace kTools.Motion
 #endregion
 
 #region State
-        internal void Setup(MotionData motionData)
+        internal void Setup(MotionData motionData, MotionBlur motionBlur, int layerMask)
         {
             // Set data
             m_MotionData = motionData;
-            //m_CameraMaterial = new Material(Shader.Find(kCameraShader));
+            m_MotionBlur = motionBlur;
+            m_layerMask = layerMask;
+            m_CameraMaterial = new Material(Shader.Find(kCameraShader));
             m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
 
@@ -47,12 +51,14 @@ namespace kTools.Motion
         {
             // Configure Render Target
             m_MotionVectorHandle.Init(kMotionVectorTexture);
+            cameraTextureDescriptor.colorFormat = RenderTextureFormat.RG16;
+            // Debug.Log(cameraTextureDescriptor.colorFormat);
             cmd.GetTemporaryRT(m_MotionVectorHandle.id, cameraTextureDescriptor, FilterMode.Point);
             ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
             cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
                 
-            // TODO: Why do I have to clear here?
-            cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
+            // Clear with 0.5 because we packed vectors from clip into NDC space
+            cmd.ClearRenderTarget(true, true, Color.gray, 1.0f);
         }
 #endregion
 
@@ -80,7 +86,8 @@ namespace kTools.Motion
                 camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
 
                 // Drawing
-                //DrawCameraMotionVectors(context, cmd, camera);
+                if(m_MotionBlur.cameraBasedMB.value)
+                    DrawCameraMotionVectors(context, cmd, camera);
                 DrawObjectMotionVectors(context, ref renderingData, cmd, camera);
             }
             ExecuteCommand(context, cmd);
@@ -110,12 +117,12 @@ namespace kTools.Motion
             return drawingSettings;
         }
 
-        //void DrawCameraMotionVectors(ScriptableRenderContext context, CommandBuffer cmd, Camera camera)
-        //{
-        //    // Draw fullscreen quad
-        //    cmd.DrawProcedural(Matrix4x4.identity, m_CameraMaterial, 0, MeshTopology.Triangles, 3, 1);
-        //    ExecuteCommand(context, cmd);
-        //}
+        void DrawCameraMotionVectors(ScriptableRenderContext context, CommandBuffer cmd, Camera camera)
+        {
+            // Draw fullscreen quad
+            cmd.DrawProcedural(Matrix4x4.identity, m_CameraMaterial, 0, MeshTopology.Triangles, 3, 1);
+            ExecuteCommand(context, cmd);
+        }
 
         void DrawObjectMotionVectors(ScriptableRenderContext context, ref RenderingData renderingData, CommandBuffer cmd, Camera camera)
         {
@@ -128,7 +135,7 @@ namespace kTools.Motion
             var cullingResults = context.Cull(ref cullingParameters);
 
             var drawingSettings = GetDrawingSettings(ref renderingData);
-            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask);
+            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask & m_layerMask);
             var renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
             
             // Draw Renderers
