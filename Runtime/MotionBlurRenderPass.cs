@@ -33,7 +33,8 @@ namespace kTools.Motion
         {
             // Set data
             m_MotionBlur = motionBlur;
-            m_Material = new Material(Shader.Find(kMotionBlurShader));
+			if(!m_Material)
+			    m_Material = new Material(Shader.Find(kMotionBlurShader));
         }
 #endregion
 
