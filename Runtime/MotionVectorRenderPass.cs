@@ -43,10 +43,10 @@ namespace kTools.Motion
             m_MotionData = motionData;
             m_MotionBlur = motionBlur;
             m_layerMask = layerMask;
-			if(!m_CameraMaterial)
+            if(!m_CameraMaterial)
                 m_CameraMaterial = new Material(Shader.Find(kCameraShader));
             if(!m_ObjectMaterial)
-			    m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
+                m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
