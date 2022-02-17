@@ -24,7 +24,7 @@ namespace kTools.Motion
         internal MotionBlurRenderPass()
         {
             // Set data
-            renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
+            renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
         }
 #endregion
 
@@ -33,7 +33,8 @@ namespace kTools.Motion
         {
             // Set data
             m_MotionBlur = motionBlur;
-            m_Material = new Material(Shader.Find(kMotionBlurShader));
+            if(!m_Material)
+                m_Material = new Material(Shader.Find(kMotionBlurShader));
         }
 #endregion
 
@@ -53,7 +54,8 @@ namespace kTools.Motion
             {
                 // Set Material properties from VolumeComponent
                 m_Material.SetFloat("_Intensity", m_MotionBlur.intensity.value);
-
+                m_Material.SetFloat("_Threshold", m_MotionBlur.threshold.value);
+                
                 // TODO: Why doesnt RenderTargetHandle.CameraTarget work?
                 var colorTextureIdentifier = new RenderTargetIdentifier("_CameraColorTexture");
 

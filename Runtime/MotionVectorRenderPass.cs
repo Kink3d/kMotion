@@ -24,6 +24,8 @@ namespace kTools.Motion
         Material m_CameraMaterial;
         Material m_ObjectMaterial;
         MotionData m_MotionData;
+        MotionBlur m_MotionBlur;
+        int m_layerMask;
 #endregion
 
 #region Constructors
@@ -35,24 +37,30 @@ namespace kTools.Motion
 #endregion
 
 #region State
-        internal void Setup(MotionData motionData)
+        internal void Setup(MotionData motionData, MotionBlur motionBlur, int layerMask)
         {
             // Set data
             m_MotionData = motionData;
-            m_CameraMaterial = new Material(Shader.Find(kCameraShader));
-            m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
+            m_MotionBlur = motionBlur;
+            m_layerMask = layerMask;
+            if(!m_CameraMaterial)
+                m_CameraMaterial = new Material(Shader.Find(kCameraShader));
+            if(!m_ObjectMaterial)
+                m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
             // Configure Render Target
             m_MotionVectorHandle.Init(kMotionVectorTexture);
+            cameraTextureDescriptor.colorFormat = RenderTextureFormat.RG16;
+            // Debug.Log(cameraTextureDescriptor.colorFormat);
             cmd.GetTemporaryRT(m_MotionVectorHandle.id, cameraTextureDescriptor, FilterMode.Point);
             ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
             cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
                 
-            // TODO: Why do I have to clear here?
-            cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
+            // Clear with 0.5 because we packed vectors from clip into NDC space
+            cmd.ClearRenderTarget(true, true, Color.gray, 1.0f);
         }
 #endregion
 
@@ -80,7 +88,8 @@ namespace kTools.Motion
                 camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
 
                 // Drawing
-                DrawCameraMotionVectors(context, cmd, camera);
+                if(m_MotionBlur.cameraBasedMB.value)
+                    DrawCameraMotionVectors(context, cmd, camera);
                 DrawObjectMotionVectors(context, ref renderingData, cmd, camera);
             }
             ExecuteCommand(context, cmd);
@@ -128,7 +137,7 @@ namespace kTools.Motion
             var cullingResults = context.Cull(ref cullingParameters);
 
             var drawingSettings = GetDrawingSettings(ref renderingData);
-            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask);
+            var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, camera.cullingMask & m_layerMask);
             var renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
             
             // Draw Renderers

@@ -8,9 +8,10 @@ namespace kTools.Motion
     sealed class MotionRendererFeature : ScriptableRendererFeature
     {
 #region Fields
+        public LayerMask m_LayerMask;
         static MotionRendererFeature s_Instance;
-        readonly MotionVectorRenderPass m_MotionVectorRenderPass;
-        readonly MotionBlurRenderPass m_MotionBlurRenderPass;
+        static MotionVectorRenderPass m_MotionVectorRenderPass;
+        static MotionBlurRenderPass m_MotionBlurRenderPass;
 
         Dictionary<Camera, MotionData> m_MotionDatas;
         uint  m_FrameCount;
@@ -23,9 +24,6 @@ namespace kTools.Motion
         {
             // Set data
             s_Instance = this;
-            m_MotionVectorRenderPass = new MotionVectorRenderPass();
-            m_MotionBlurRenderPass = new MotionBlurRenderPass();
-            m_MotionDatas = new Dictionary<Camera, MotionData>();
         }
 #endregion
 
@@ -33,12 +31,19 @@ namespace kTools.Motion
         public override void Create()
         {
             name = "Motion";
+            m_MotionVectorRenderPass = new MotionVectorRenderPass();
+            m_MotionBlurRenderPass = new MotionBlurRenderPass();
+            m_MotionDatas = new Dictionary<Camera, MotionData>();
         }
 #endregion
         
 #region RenderPass
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
+            // Get motion blur settings
+            var stack = VolumeManager.instance.stack;
+            var motionBlur = stack.GetComponent<MotionBlur>();
+            
             // Get MotionData
             var camera = renderingData.cameraData.camera;
             MotionData motionData;
@@ -53,12 +58,10 @@ namespace kTools.Motion
             UpdateMotionData(camera, motionData);
 
             // Motion vector pass
-            m_MotionVectorRenderPass.Setup(motionData);
+            m_MotionVectorRenderPass.Setup(motionData, motionBlur, m_LayerMask.value);
             renderer.EnqueuePass(m_MotionVectorRenderPass);
 
             // Motion blur pass
-            var stack = VolumeManager.instance.stack;
-            var motionBlur = stack.GetComponent<MotionBlur>();
             if (motionBlur.IsActive() && !renderingData.cameraData.isSceneViewCamera)
             {
                 m_MotionBlurRenderPass.Setup(motionBlur);
